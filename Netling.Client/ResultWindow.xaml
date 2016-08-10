@@ -23,9 +23,11 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Button Margin="0,0,0,5" Background="LightGray" BorderThickness="0" Foreground="Black" Padding="5" FontSize="11" Click="UseBaseline">USE AS BASELINE</Button>
             <Button Grid.Row="1" Background="LightGray" BorderThickness="0" Foreground="Black" Padding="5" FontSize="11" Click="ClearBaseline">CLEAR BASELINE</Button>
+            <CheckBox x:Name="colorBlindnessCB" Grid.Row="2" Margin="5" FontSize="11" Click="colorBlindnessCB_Click">Color blind friendly UI</CheckBox>
         </Grid>
 
         <client:ValueUserControl x:Name="RequestsValueUserControl" Title="Requests" Unit="rps" Grid.Row="1" Grid.Column="0"/>

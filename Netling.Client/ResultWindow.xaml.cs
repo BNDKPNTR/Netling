@@ -7,11 +7,14 @@ using System.Windows;
 using System.Windows.Media;
 using Netling.Core.Models;
 using OxyPlot;
+using System.Windows.Controls;
+using Netling.Client.Properties;
 
 namespace Netling.Client
 {
     public partial class ResultWindow
     {
+        private const string IsColorBlindFriendly = "IsColorBlindFriendly";
         private ResultWindowItem _resultWindowItem;
         private readonly MainWindow _sender;
 
@@ -19,6 +22,7 @@ namespace Netling.Client
         {
             _sender = sender;
             InitializeComponent();
+            colorBlindnessCB.IsChecked = (bool)Settings.Default[IsColorBlindFriendly];
         }
 
         public async Task Load(WorkerResult workerResult)
@@ -69,7 +73,7 @@ namespace Netling.Client
             return Task.Run(() =>
             {
                 var result = ResultWindowItem.Parse(workerResult);
-                var max = (int) Math.Floor(workerResult.Elapsed.TotalMilliseconds / 1000);
+                var max = (int)Math.Floor(workerResult.Elapsed.TotalMilliseconds / 1000);
 
                 var throughput = workerResult.Seconds
                     .Where(r => r.Key < max && r.Value.Count > 0)
@@ -129,26 +133,32 @@ namespace Netling.Client
             ThreadAffinityValueUserControl.BaselineValue = baseline.ThreadAffinity ? "ON" : "OFF";
 
             RequestsValueUserControl.BaselineValue = $"{baseline.JobsPerSecond:#,0}";
-            RequestsValueUserControl.ValueBrush = GetValueBrush(_resultWindowItem.JobsPerSecond, baseline.JobsPerSecond);
 
             ElapsedValueUserControl.BaselineValue = $"{baseline.ElapsedSeconds:#,0}";
 
             BandwidthValueUserControl.BaselineValue = $"{baseline.Bandwidth:0}";
-            BandwidthValueUserControl.ValueBrush = GetValueBrush(_resultWindowItem.Bandwidth, baseline.Bandwidth);
 
             ErrorsValueUserControl.BaselineValue = baseline.Errors.ToString();
-            ErrorsValueUserControl.ValueBrush = GetValueBrush(baseline.Errors, _resultWindowItem.Errors);
 
             MedianValueUserControl.BaselineValue = string.Format(baseline.Median > 5 ? "{0:#,0}" : "{0:0.000}", baseline.Median);
-            MedianValueUserControl.ValueBrush = GetValueBrush(baseline.Median, _resultWindowItem.Median);
 
             StdDevValueUserControl.BaselineValue = string.Format(baseline.StdDev > 5 ? "{0:#,0}" : "{0:0.000}", baseline.StdDev);
-            StdDevValueUserControl.ValueBrush = GetValueBrush(baseline.StdDev, _resultWindowItem.StdDev);
 
             MinValueUserControl.BaselineValue = string.Format(baseline.Min > 5 ? "{0:#,0}" : "{0:0.000}", baseline.Min);
-            MinValueUserControl.ValueBrush = GetValueBrush(baseline.Min, _resultWindowItem.Min);
 
             MaxValueUserControl.BaselineValue = string.Format(baseline.Max > 5 ? "{0:#,0}" : "{0:0.000}", baseline.Max);
+
+            LoadValueUserControlBrushes(baseline);
+        }
+
+        private void LoadValueUserControlBrushes(ResultWindowItem baseline)
+        {
+            RequestsValueUserControl.ValueBrush = GetValueBrush(_resultWindowItem.JobsPerSecond, baseline.JobsPerSecond);
+            BandwidthValueUserControl.ValueBrush = GetValueBrush(_resultWindowItem.Bandwidth, baseline.Bandwidth);
+            ErrorsValueUserControl.ValueBrush = GetValueBrush(baseline.Errors, _resultWindowItem.Errors);
+            MedianValueUserControl.ValueBrush = GetValueBrush(baseline.Median, _resultWindowItem.Median);
+            StdDevValueUserControl.ValueBrush = GetValueBrush(baseline.StdDev, _resultWindowItem.StdDev);
+            MinValueUserControl.ValueBrush = GetValueBrush(baseline.Min, _resultWindowItem.Min);
             MaxValueUserControl.ValueBrush = GetValueBrush(baseline.Max, _resultWindowItem.Max);
         }
 
@@ -157,7 +167,31 @@ namespace Netling.Client
             if (Math.Abs(v1 - v2) < 0.001)
                 return null;
 
-            return v1 > v2 ? new SolidColorBrush(Colors.Green) : new SolidColorBrush(Colors.Red);
+            var betterValueBrush = (bool)Settings.Default[IsColorBlindFriendly] ?
+                new SolidColorBrush(Color.FromRgb(0, 121, 197)) : new SolidColorBrush(Colors.Green);
+
+            return v1 > v2 ? betterValueBrush : new SolidColorBrush(Colors.Red);
+        }
+
+        private void colorBlindnessCB_Click(object sender, RoutedEventArgs e)
+        {
+            var isChecked = (sender as CheckBox).IsChecked ?? false;
+
+            if (isChecked)
+            {
+                Settings.Default[IsColorBlindFriendly] = true;
+            }
+            else
+            {
+                Settings.Default[IsColorBlindFriendly] = false;
+            }
+
+            Settings.Default.Save();
+
+            if (_sender.ResultWindowItem != null)
+            {
+                LoadValueUserControlBrushes(_sender.ResultWindowItem);
+            }
         }
     }
 

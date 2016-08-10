@@ -22,5 +22,17 @@ namespace Netling.Client.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IsColorBlindFriendly {
+            get {
+                return ((bool)(this["IsColorBlindFriendly"]));
+            }
+            set {
+                this["IsColorBlindFriendly"] = value;
+            }
+        }
     }
 }
